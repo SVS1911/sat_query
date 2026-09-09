@@ -65,6 +65,26 @@ Use it from the controller by passing `caption_checkpoint=...` or setting
 dataset using compact normalized image features. Without a checkpoint, the
 controller explicitly reports and uses the spectral heuristic captioner.
 
+## Optional Qwen3-VL BigEarthNet adapter
+
+The colleague's adapter can be used for single-image VQA and captions when
+its files are downloaded locally and the machine has the required runtime.
+Set `SATQUERY_QWEN_ADAPTER` to the adapter folder before starting the app:
+
+```bash
+set SATQUERY_QWEN_ADAPTER=C:\models\satquery-qwen3vl-bigearthnet-txt-lora
+python app.py
+```
+
+The adapter loads the pinned `Qwen/Qwen3-VL-2B-Instruct` base revision from
+`base_revision.txt`. It is not used for bi-temporal change analysis, SAR,
+12/13-band imagery, or optical/SAR fusion; those workflows continue to use
+the specialist models designed for them. If the optional packages, weights,
+GPU, or inference runtime are unavailable, the controller records the reason
+and uses the CPU-safe specialist fallback instead of inventing an answer.
+Do not put model weights, Hugging Face tokens, or notebook service tokens in
+this repository.
+
 ## Other model modules
 
 `RemoteSensingVLM` provides the shared evidence seam. It supports the
