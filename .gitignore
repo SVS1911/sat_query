@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+data/captioning/
+models/*.json
+reports/
+*.ckpt
+*.pt
+*.pth
