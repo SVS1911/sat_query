@@ -326,5 +326,4 @@ with gr.Blocks(title="SatQuery AI", theme=_theme, css=NEON_CSS) as demo:
                 outputs=[output_image, answer_box, header_md, audit_box],
             )
 
-if __name__ == "__main__":
-    demo.launch()
+demo.launch()
