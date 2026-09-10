@@ -8,3 +8,5 @@ reports/
 *.ckpt
 *.pt
 *.pth
+frontend/node_modules/
+frontend/dist/

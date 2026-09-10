@@ -97,6 +97,18 @@ class QwenBackend:
 
 def load_configured_backend() -> QwenBackend | None:
     path = os.environ.get("SATQUERY_QWEN_ADAPTER", "").strip()
-    if not path:
+    model_id = os.environ.get("SATQUERY_QWEN_MODEL_ID", "").strip()
+    if not path and not model_id:
         return None
+    if not path:
+        try:
+            from huggingface_hub import snapshot_download
+        except ImportError as exc:
+            raise RuntimeError(
+                "SATQUERY_QWEN_MODEL_ID requires the huggingface_hub package."
+            ) from exc
+        path = snapshot_download(
+            repo_id=model_id,
+            token=os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_HUB_TOKEN"),
+        )
     return QwenBackend(path)

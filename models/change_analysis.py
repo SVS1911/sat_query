@@ -115,21 +115,37 @@ def describe_change(evidence_before: ImageEvidence, evidence_after: ImageEvidenc
     ranked = sorted(deltas.items(), key=lambda kv: abs(kv[1]), reverse=True)
     top = [(c, d) for c, d in ranked if abs(d) > 0.02][:2]
 
-    if changed_pct < 1.0 and not top:
-        text = "The two images look mostly the same. No important change was found."
-        confidence = 0.6
-    else:
-        parts = []
-        for cls, d in top:
-            direction = "increased" if d > 0 else "decreased"
-            parts.append(f"{cls.replace('_', ' ')} {direction} by about {abs(d)*100:.1f}%")
-        change_desc = "; ".join(parts) if parts else "land-cover composition shifted only slightly"
-        text = f"About {changed_pct:.1f}% of the image changed, mainly in {location}. {change_desc.capitalize()}."
-        if deltas["vegetation"] < -0.05 and deltas["built_up"] > 0.01:
-            text += " Vegetation decreased as developed land (buildings, roads, and cleared plots) increased."
-        if not change.get("water_reliable", False):
-            text += " The river follows the same path; RGB images cannot measure small water changes reliably."
-        confidence = min(0.9, 0.5 + changed_pct / 100)
+    lines = [
+        f"About {changed_pct:.1f}% of the image changed, mainly in {location}.",
+        "",
+        "Land-cover changed:",
+    ]
+    display_names = {
+        "vegetation": "Vegetation",
+        "built_up": "Built-up land",
+        "bare_soil": "Bare soil",
+        "water": "Water",
+        "other": "Other",
+    }
+    for cls in LAND_COVER_CLASSES:
+        delta = deltas[cls]
+        name = display_names.get(cls, cls.replace("_", " ").capitalize())
+        if abs(delta) < 0.01:
+            status = "stayed about the same"
+        else:
+            direction = "increased" if delta > 0 else "decreased"
+            status = f"{direction} by about {abs(delta) * 100:.1f}%"
+        lines.append(f"- {name}: {status}.")
+
+    if not change.get("water_reliable", False):
+        lines.extend([
+            "",
+            "Note:",
+            "- The river follows the same path.",
+            "- RGB images cannot measure small water changes reliably.",
+        ])
+    text = "\n".join(lines)
+    confidence = 0.6 if changed_pct < 1.0 and not top else min(0.9, 0.5 + changed_pct / 100)
 
     return {"answer": text, "confidence": round(confidence, 2), "changed_fraction": change["changed_fraction"],
             "class_deltas": deltas, "mask": change["mask"]}

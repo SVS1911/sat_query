@@ -326,36 +326,5 @@ with gr.Blocks(title="SatQuery AI", theme=_theme, css=NEON_CSS) as demo:
                 outputs=[output_image, answer_box, header_md, audit_box],
             )
 
-        with gr.Tab("Evaluation"):
-            gr.Markdown(
-                "### Model evaluation harness\n"
-                "`utils/evaluation.py` computes a confusion matrix and per-class "
-                "precision / recall / F1 / IoU for the land-cover backend, and "
-                "per-task accuracy for every specialist model, against labeled "
-                "data. Below is a live run against a built-in synthetic benchmark "
-                "scene (shadow vs. water is the classic failure case) so you can "
-                "see the harness work today — point `evaluate_landcover()` / "
-                "`evaluate_dataset()` at your own labeled data once available."
-            )
-            eval_btn = gr.Button("▶ RUN BENCHMARK", variant="secondary")
-            eval_output = gr.Textbox(label="Evaluation report", lines=26, interactive=False, elem_id="sq-audit")
-            eval_btn.click(run_evaluation_demo, inputs=[], outputs=[eval_output])
-
-        with gr.Tab("About this build"):
-            gr.Markdown(
-                "### Backends active in this build\n"
-                "- **Land-cover classifier (default):** heuristic spectral indices "
-                "(NDVI / NDWI / MNDWI / NDBI when band roles are supplied; RGB "
-                "color proxies otherwise). See `utils/spectral_indices.py`.\n"
-                "- **CNN options (real, trainable, not yet trained here):**\n"
-                "  - `training/finetune_bigearthnet.py` — scene-level multi-label "
-                "classifier on real BigEarthNet data.\n"
-                "  - `training/train_segmentation_cnn.py` — pixel-level U-Net-lite "
-                "segmentation CNN, trainable on your own image+mask datasets.\n\n"
-                "Swap either in via `models/base_vlm.RemoteSensingVLM(weights_path=...)` "
-                "or `RemoteSensingVLM(segmentation_backend=...)` — nothing else in "
-                "the app needs to change."
-            )
-
 if __name__ == "__main__":
     demo.launch()

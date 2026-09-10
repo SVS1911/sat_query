@@ -26,7 +26,8 @@ from utils.image_io import LoadedImage, load_image, to_display_rgb
 from utils.visualization import overlay_class_map, overlay_binary_mask, draw_bboxes
 from utils.spectral_indices import BandRoles, BAND_PRESETS
 from controller.input_validator import validate
-from controller.query_parser import parse, TaskPlan
+from controller.query_parser import parse, TaskPlan, set_llm_backend
+from controller.llm_query import configured_planner
 from models.base_vlm import RemoteSensingVLM
 from models import vqa, captioning, grounding, change_analysis, optical_sar_fusion
 from models.qwen_backend import load_configured_backend
@@ -65,6 +66,13 @@ class SatQueryController:
             self.qwen_backend = load_configured_backend()
         except (FileNotFoundError, ImportError, RuntimeError, OSError, ValueError) as exc:
             self.qwen_backend_error = str(exc)
+        self.llm_planner_error = None
+        try:
+            planner = configured_planner()
+            if planner is not None:
+                set_llm_backend(planner)
+        except (ValueError, OSError) as exc:
+            self.llm_planner_error = str(exc)
         self.reports_dir = reports_dir
         os.makedirs(self.reports_dir, exist_ok=True)
         self.caption_model = None
@@ -113,6 +121,10 @@ class SatQueryController:
 
         scenario = validation.scenario
         audit.append(f"Selected input scenario: {scenario}.")
+        if self.llm_planner_error:
+            audit.append(f"LLM query planner unavailable; using rule-based parser: {self.llm_planner_error}")
+        elif os.environ.get("SATQUERY_LLM_ENDPOINT"):
+            audit.append("LLM query planner enabled; specialist execution remains local.")
 
         # --- Step 2: interpret query / classify task ---
         plan: TaskPlan = parse(query, scenario)

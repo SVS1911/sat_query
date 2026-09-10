@@ -16,6 +16,43 @@ pip install -r requirements.txt
 Run the Gradio console with `python app.py`. The base heuristic models require
 no model download and work with the sample images in `data/sample/`.
 
+## React frontend
+
+The `frontend/` directory contains an additive responsive SatQuery web
+interface. It does not replace or modify the existing Python/Gradio analysis
+workflow:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The existing Gradio app remains the functional analysis entry point through
+`python app.py`. The React console submits requests only when a compatible
+multipart API is explicitly provided through `VITE_API_URL`; without it, the
+frontend explains that the original Gradio console should be used. This keeps
+the existing controller behavior unchanged.
+
+## Optional LLM query understanding
+
+You can connect an OpenAI-compatible chat endpoint so the app understands
+natural-language questions before selecting its existing specialist. The LLM
+only chooses the workflow; image analysis and answers still come from the
+local SatQuery models.
+
+```powershell
+$env:SATQUERY_LLM_ENDPOINT = "https://api.openai.com/v1"
+$env:SATQUERY_LLM_API_KEY = "your-key"
+$env:SATQUERY_LLM_MODEL = "your-model"
+python app.py
+```
+
+The planner returns structured JSON and accepts only supported tasks. If the
+endpoint is missing, misconfigured, unavailable, or returns invalid routing,
+the app records the reason and uses its transparent rule-based parser. Never
+commit the API key.
+
 ## Public launch checklist
 
 This repository does not configure hosting or DNS. Before a public launch,
@@ -75,6 +112,19 @@ Set `SATQUERY_QWEN_ADAPTER` to the adapter folder before starting the app:
 set SATQUERY_QWEN_ADAPTER=C:\models\satquery-qwen3vl-bigearthnet-txt-lora
 python app.py
 ```
+
+Alternatively, let Hugging Face download the public adapter automatically:
+
+```powershell
+$env:SATQUERY_QWEN_MODEL_ID = "aanandmodi/satquery-qwen3vl-bigearthnet-txt-lora"
+$env:HF_TOKEN = "hf_your_replacement_token"
+python app.py
+```
+
+Keep `HF_TOKEN` in your shell or a secret manager only. Do not paste it into
+Python files, notebooks, README files, screenshots, or Git history. A token
+is normally unnecessary for a public repository, but can be supplied for
+authenticated or rate-limited downloads.
 
 The adapter loads the pinned `Qwen/Qwen3-VL-2B-Instruct` base revision from
 `base_revision.txt`. It is not used for bi-temporal change analysis, SAR,
